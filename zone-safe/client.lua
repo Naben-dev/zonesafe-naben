@@ -1,20 +1,19 @@
 --Zone Safe edit by Naben
 
+--------------------------------------------------------------------------------------------------------------
+------------First off, many thanks to @anders for help with the majority of this script. ---------------------
+------------Also shout out to @setro for helping understand pNotify better.              ---------------------
+--------------------------------------------------------------------------------------------------------------
+------------To configure: Add/replace your own coords in the sectiong directly below.    ---------------------
+------------        Goto LINE 90 and change "50" to your desired SafeZone Radius.        ---------------------
+------------        Goto LINE 130 to edit the Marker( Holographic circle.)               ---------------------
+--------------------------------------------------------------------------------------------------------------
+-- Place your own coords here!
 local zones = {
-	{ ['x'] = 231.41, ['y'] = -785.72, ['z'] = 27.52},
-	{ ['x'] = 231.38, ['y'] = -876.35, ['z'] = 30.49 },
-	{ ['x'] = 407.58, ['y'] = -987.89, ['z'] = 29.27 },
-	{ ['x'] = -802.43, ['y'] = -223.08, ['z'] = 37.17 },
-	{ ['x'] = -535.36, ['y'] = -220.56, ['z'] = 37.64 },
-	{ ['x'] = -519.118, ['y'] = -249.15, ['z'] = 36.27 },
-	{ ['x'] = 84.45, ['y'] = -285.87, ['z'] = 110.20 }, --------------------------------c'est les zones safe , tes libres d'en rajoutée , ou d'en supprimer
-	{ ['x'] = 375.72, ['y'] = 2543.78, ['z'] = 44.62 },
-	{ ['x'] = 1769.55, ['y'] = 3331.33, ['z'] = 41.32 },
-    { ['x'] = 1200.41, ['y'] = -1460.74, ['z'] = 34.85 },	
-    { ['x'] = 921.57, ['y'] = 49.33, ['z'] = 80.9 },	
-	{ ['x'] = 1105.63, ['y'] = 213.31, ['z'] = -49.44 },	
-	{ ['x'] = 1147.62, ['y'] = 265.91, ['z'] = -51.84 },	
-
+	{ ['x'] = 230.499877, ['y'] = -799.499877, ['z'] = 30.56320762},
+	{ ['x'] = -37.186229, ['y'] = -1109.8118896, ['z'] = 26.4381790 },
+	{ ['x'] = -206.183166, ['y'] = -1312.269409, ['z'] = 31.22110366 },
+	{ ['x'] = -35.246559, ['y'] = -1110.03979, ['z'] = 26.437723159 }
 }
 
 local notifIn = false
@@ -28,6 +27,12 @@ local closestZone = 1
 -------You can comment out this section if you dont want any blips showing the zones on the map.--------------
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
+
+Citizen.CreateThread(function()
+	while not NetworkIsPlayerActive(PlayerId()) do
+		Citizen.Wait(0)
+	end
+end)
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
@@ -72,31 +77,31 @@ Citizen.CreateThread(function()
 		local x,y,z = table.unpack(GetEntityCoords(player, true))
 		local dist = Vdist(zones[closestZone].x, zones[closestZone].y, zones[closestZone].z, x, y, z)
 	
-		if dist <= 50.0 then  ------------------------------------------------------------------------------ Here you can change the RADIUS of the Safe Zone. Remember, whatever you put here will DOUBLE because 
+		if dist <= 60.0 then  ------------------------------------------------------------------------------ Here you can change the RADIUS of the Safe Zone. Remember, whatever you put here will DOUBLE because 
 			if not notifIn then																			  -- it is a sphere. So 50 will actually result in a diameter of 100. I assume it is meters. No clue to be honest.
 				NetworkSetFriendlyFireOption(false)
 				ClearPlayerWantedLevel(PlayerId())
 				SetCurrentPedWeapon(player,GetHashKey("WEAPON_UNARMED"),true)
-                  TriggerEvent("seatbelt:notify", "~g~Tes en Zone Safe !")
-					 -- text = "<b style='color:#1E90FF'>Vous êtes en zone Safe</b>",
-					-- type = "success",
-					-- timeout = (3000),
-					-- layout = "bottomcenter",
-					-- queue = "global"
-				-- })
+				TriggerEvent("pNotify:SendNotification",{
+					text = "<b style='color:#1E90FF'>Vous êtes en Zone Safe</b>",
+					type = "success",
+					timeout = (3000),
+					layout = "bottomcenter",
+					queue = "global"
+				})
 				notifIn = true
 				notifOut = false
 			end
 		else
 			if not notifOut then
 				NetworkSetFriendlyFireOption(true)
-				 TriggerEvent("seatbelt:notify", "~r~Tes plus en Zone Safe !")
-					-- text = "<b style='color:#1E90FF'>Vous n'êtes plus en zone Safe</b>",
-					-- type = "error",
-					-- timeout = (3000),
-					-- layout = "bottomcenter",
-					-- queue = "global"
-				-- })
+				TriggerEvent("pNotify:SendNotification",{
+					text = "<b style='color:#1E90FF'>Vous n'êtes plus en Zone Safe</b>",
+					type = "error",
+					timeout = (3000),
+					layout = "bottomcenter",
+					queue = "global"
+				})
 				notifOut = true
 				notifIn = false
 			end
@@ -107,24 +112,29 @@ Citizen.CreateThread(function()
       	DisableControlAction(0, 106, true) -- Disable in-game mouse controls
 			if IsDisabledControlJustPressed(2, 37) then --if Tab is pressed, send error message
 				SetCurrentPedWeapon(player,GetHashKey("WEAPON_UNARMED"),true) -- if tab is pressed it will set them to unarmed (this is to cover the vehicle glitch until I sort that all out)
-				 TriggerEvent("seatbelt:notify", "~p~Pas d'armes ici ou j'te démarre!")
-					-- text = "<b style='color:#1E90FF'>You can not use weapons in a Safe Zone</b>",
-					-- type = "error",
-					-- timeout = (3000),
-					-- layout = "bottomcenter",
-					-- queue = "global"
-				-- })
+				TriggerEvent("pNotify:SendNotification",{
+					text = "<b style='color:#1E90FF'>Vous ne pouvez pas utiliser d'armes dans une Zone Safe</b>",
+					type = "error",
+					timeout = (3000),
+					layout = "bottomcenter",
+					queue = "global"
+				})
 			end
 			if IsDisabledControlJustPressed(0, 106) then --if LeftClick is pressed, send error message
 				SetCurrentPedWeapon(player,GetHashKey("WEAPON_UNARMED"),true) -- If they click it will set them to unarmed
-				 TriggerEvent("seatbelt:notify", "~y~Fait pas le bandit ici ou j'te fume !")
-					-- text = "<b style='color:#1E90FF'>You can not do that in a Safe Zone</b>",
-					-- type = "error",
-					-- timeout = (3000),
-					-- layout = "bottomcenter",
-					-- queue = "global"
-				-- })
+				TriggerEvent("pNotify:SendNotification",{
+					text = "<b style='color:#1E90FF'>Vous ne pouvez pas faire ça dans une Zone Safe</b>",
+					type = "error",
+					timeout = (3000),
+					layout = "bottomcenter",
+					queue = "global"
+				})
 			end
 		end
+		-- Comment out lines 142 - 145 if you dont want a marker.
+	 	--if DoesEntityExist(player) then	      --The -1.0001 will place it on the ground flush		-- SIZING CIRCLE |  x    y    z | R   G    B   alpha| *more alpha more transparent*
+	 		--DrawMarker(1, zones[closestZone].x, zones[closestZone].y, zones[closestZone].z-1.0001, 0, 0, 0, 0, 0, 0, 100.0, 100.0, 2.0, 13, 232, 255, 155, 0, 0, 2, 0, 0, 0, 0) -- heres what all these numbers are. Honestly you dont really need to mess with any other than what isnt 0.
+	 		--DrawMarker(type, float posX, float posY, float posZ, float dirX, float dirY, float dirZ, float rotX, float rotY, float rotZ, float scaleX, float scaleY, float scaleZ, int red, int green, int blue, int alpha, BOOL bobUpAndDown, BOOL faceCamera, int p19(LEAVE AS 2), BOOL rotate, char* textureDict, char* textureName, BOOL drawOnEnts)
+	 	--end
 	end
 end)
